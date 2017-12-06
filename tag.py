@@ -18,7 +18,7 @@ class Reader(threading.Thread):
             (status, tagType) = reader.MFRC522_Request(reader.PICC_REQIDL)
             if status == reader.MI_OK:
                 (status, uid) = reader.MFRC522_Anticoll()
-                if status = reader.MI_OK:
+                if status == reader.MI_OK:
                     uuid = str(uid[0]) + str(uid[1]) + str(uid[2]) + str(uid[3])
                 else:
                     uuid = None
