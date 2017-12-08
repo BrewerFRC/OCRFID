@@ -1,11 +1,12 @@
 import RPi.GPIO as GPIO
 import MFRC522
 import time
+import threading
 
 ENABLED = True
 TIMEOUT = 0.1
 
-reader = MFRC522.MFRC552()
+reader = MFRC522.MFRC522()
 
 uuid = None
 rising = False
@@ -21,6 +22,7 @@ def isRising():
 
 class Reader(threading.Thread):
     def run(self):
+        global uuid
         while ENABLED:
             (status, tagType) = reader.MFRC522_Request(reader.PICC_REQIDL)
             if status == reader.MI_OK:

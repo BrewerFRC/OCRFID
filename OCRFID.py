@@ -1,3 +1,4 @@
+import time
 import tag
 import database
 import Flask
@@ -22,5 +23,6 @@ flaskThread.start()
 try:
     while True:
         print tag.readUUID()
+        time.sleep(1)
 finally:
     tag.ENABLED = False
