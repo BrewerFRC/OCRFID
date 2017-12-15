@@ -36,6 +36,9 @@ def recordTime(uuid):
         if incompleteTime[0] - time.time() > 3600*18:
             print "Removed time for ", uuid
             c.execute('''DELETE FROM timesheet WHERE uuid=? AND out_time=-1''', (uuid,))
+        #Ignore accidental triggers close to login
+        elif incompleteTime[0] - time.time() < 60:
+            return
         else:
             print "Closed time for ", uuid
             c.execute('''UPDATE timesheet SET out_time=? WHERE uuid=? AND out_time=-1''', (time.time(),))
