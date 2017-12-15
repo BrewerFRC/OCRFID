@@ -6,6 +6,8 @@ rising = False
 falling = False
 
 def update():
+    global rising
+    global falling
     if tag.readUUID():
         if not rising:
             rising()
