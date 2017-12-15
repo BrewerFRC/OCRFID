@@ -24,7 +24,6 @@ class Reader(threading.Thread):
     def run(self):
         global uuid
         while ENABLED:
-            print "Run"
             (status, tagType) = reader.MFRC522_Request(reader.PICC_REQIDL)
             if status == reader.MI_OK:
                 (status, uid) = reader.MFRC522_Anticoll()
