@@ -10,17 +10,17 @@ def update():
     global falling
     if tag.readUUID():
         if not rising:
-            rising()
+            riseEvent()
             rising = True
         falling = False
     else:
         if not falling:
-            falling()
+            fallEvent()
             falling = True
         rising = False
 
-def rising():
+def riseEvent():
     database.recordTime(tag.readUUID())
 
-def falling():
+def fallEvent():
     pass
