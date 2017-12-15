@@ -1,6 +1,7 @@
 import time
 import tag
 import database
+import tracker
 import Flask
 
 class FlaskThread(threading.Thread):
@@ -22,7 +23,7 @@ flaskThread.start()
 
 try:
     while True:
-        print tag.readUUID()
-        time.sleep(1)
+        tracker.update()
+        time.sleep(0.1)
 finally:
     tag.ENABLED = False

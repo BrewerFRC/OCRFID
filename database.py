@@ -34,11 +34,14 @@ def recordTime(uuid):
     if len(incompleteTime) > 0:
         #Ignore incomplete entry if over 18 hours old.
         if incompleteTime[0] - time.time() > 3600*18:
+            print "Removed time for ", uuid
             c.execute('''DELETE FROM timesheet WHERE uuid=? AND out_time=-1''', (uuid,))
         else:
+            print "Closed time for ", uuid
             c.execute('''UPDATE timesheet SET out_time=? WHERE uuid=? AND out_time=-1''', (time.time(),))
             return
     #If no open time is found, create a login
+    print "Opened time for ", uuid
     c.execute('''INSERT INTO timesheet (uuid, event, in_time, out_time) VALUES (?, ?, ?, -1)''', (uuid, currentEvent, time.time(),))
 
 def removeOutdatedEntries():
