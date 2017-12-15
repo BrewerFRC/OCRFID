@@ -41,7 +41,7 @@ def recordTime(uuid):
             return
         else:
             print "Closed time for ", uuid
-            c.execute('''UPDATE timesheet SET out_time=? WHERE uuid=? AND out_time=-1''', (time.time(),))
+            c.execute('''UPDATE timesheet SET out_time=? WHERE uuid=? AND out_time=-1''', (time.time(), uuid,))
             return
     #If no open time is found, create a login
     print "Opened time for ", uuid
