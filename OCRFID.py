@@ -1,7 +1,11 @@
 import time
 import tag
 import database
-import Flask
+from flask import Flask
+import threading
+import os
+
+app = Flask(__name__)
 
 class FlaskThread(threading.Thread):
     @app.route("/register")
