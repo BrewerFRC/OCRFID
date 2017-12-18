@@ -52,5 +52,16 @@ def removeOutdatedEntries():
     #Delete incomplete slots
     c.execute('''DELETE FROM timesheet WHERE out_time=-1''')
 
+def sumTime(uuid, events):
+    if not uuid:
+        return
+    c = conn.cursor()
+
+    c.execute('''SELECT sum(out_time), sum(in_time) WHERE uuid=? AND event in ?''', (uuid, str(events),))
+    sums = c.fetchone()
+    if sums and len(sums) >= 2:
+        return sums[0] - sums[1]
+    return 0
+
 def close():
     conn.close()

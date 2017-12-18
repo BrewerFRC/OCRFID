@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<style>
+#main-container {
+  display: grid;
+  grid-template-rows: 25% auto;
+  grid-template-columns: 25% auto;
+}
+#events {
+  grid-column-start: 1;
+  grid-column-end: 1;
+  grid-row-start: 1;
+  grid-row-end: 2;
+  overflow-y: scroll;
+  border-width: 3px;
+  border-color: black;
+}
+#search {
+  grid-column-start: 2;
+  grid-column-end: 2;
+  grid-row-start: 1;
+  grid-row-end: 1;
+}
+#time {
+  grid-column-start: 2;
+  grid-column-end: 2;
+  grid-row-start: 2;
+  grid-row-end: 2;
+}
+</style>
+
+<div id="main-container">
+
+  <ul id="events"></ul>
+  <div id="search">
+    <form>
+      <input style="width: 75%;margin-top: auto;" type="text" placeholder="Type a name here to narrow search.">
+    </form>
+  </div>
+  <table id="time" class="table-striped">
+    <tr>
+      <td>UUID</td>
+      <td>Name</td>
+      <td>Hours</td>
+      <td>Last Clocked</td>
+      <td>Register Date</td>
+    </tr>
+  </table>
+
+</div>
+
+</html>
