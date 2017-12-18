@@ -1,6 +1,9 @@
 import sqlite3
 import time
 
+#Time in seconds to wait before allowing another time event for a user.
+DEBOUNCE = 2
+
 conn = sqlite3.connect('ocrfid.db')
 currentEvent = "build"
 
@@ -24,6 +27,8 @@ def registerMember(name, uuid):
         c.execute('''UPDATE members SET name=?, register_time=? WHERE uuid=?''', (name, time.time(), uuid,))
     else:
         c.execute('''INSERT INTO members (uuid, name, register_time) VALUES (?, ?, ?)''', (uuid, name, time.time()))
+    
+    conn.commit()
 
 def recordTime(uuid):
     c = conn.cursor()
@@ -33,24 +38,38 @@ def recordTime(uuid):
     incompleteTime = c.fetchone()
     if incompleteTime:
         #Ignore incomplete entry if over 18 hours old.
-        if incompleteTime[0] - time.time() > 3600*18:
+        if time.time() - incompleteTime[0] > 3600*18:
             print "Removed time for ", uuid
             c.execute('''DELETE FROM timesheet WHERE uuid=? AND out_time=-1''', (uuid,))
         #Ignore accidental triggers close to login
-        elif incompleteTime[0] - time.time() < 60:
+        elif time.time() - incompleteTime[0] < DEBOUNCE:
+            print "Ignoring accidental trigger."
             return
         else:
             print "Closed time for ", uuid
             c.execute('''UPDATE timesheet SET out_time=? WHERE uuid=? AND out_time=-1''', (time.time(), uuid,))
             return
     #If no open time is found, create a login
+    c.execute('''SELECT uuid, in_time, out_time FROM timesheet WHERE uuid=?''', (uuid,))
+    
+    c.execute('''SELECT max(out_time) FROM timesheet WHERE uuid=?''', (uuid,))
+    lastOutTime = c.fetchone()
+    if lastOutTime and lastOutTime[0]:
+        print lastOutTime
+        if time.time() - lastOutTime[0] < DEBOUNCE:
+            print "Ignoring accidental trigger."
+            return
     print "Opened time for ", uuid
     c.execute('''INSERT INTO timesheet (uuid, event, in_time, out_time) VALUES (?, ?, ?, -1)''', (uuid, currentEvent, time.time(),))
+    
+    conn.commit()
 
 def removeOutdatedEntries():
     c = conn.cursor()
     #Delete incomplete slots
     c.execute('''DELETE FROM timesheet WHERE out_time=-1''')
+
+    conn.commit()
 
 def close():
     conn.close()
