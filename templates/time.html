@@ -7,7 +7,7 @@
 #main-container {
   display: inline-grid;
   grid-template-rows: 7% 7% auto;
-  grid-template-columns: 15% 20% 20% auto;
+  grid-template-columns: 15% 30% 20% auto;
   width: 100vw;
   height: 100vh;
   background-color: #414546;
@@ -103,6 +103,7 @@ Scrollbar
   <form id="registerMember" method="post" class="form-inline">
     <input type="text" id="member" name="member" placeholder="Member Name" required>
     <input type="button" id="newMember" class="form-control" value="Register Member" disabled="disabled">
+    <input type="button" id="signIn" class="form-control" value="Disable Sign-In">
   </form>
   <form id="createEvent" method="post" class="form-inline">
     <input type="text" id="event" name="event" placeholder="Event Name" required>
@@ -220,6 +221,12 @@ $(document).ready(function() {
   });
 
   //POST functions
+  $('#signin').click(function() {
+    $.ajax(function() {
+      url: '/toggleSignin',
+      type: 'POST'
+    });
+  });
   $('#newMember').click(function() {
     $.ajax({
       url: '/register',

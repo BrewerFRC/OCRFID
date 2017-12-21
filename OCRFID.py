@@ -51,6 +51,11 @@ class FlaskThread(threading.Thread):
         else:
             return json.dumps({'status':'FAILED'})
 
+    @app.route("/toggleSignIn", methods=['POST'])
+    def toggleSignIn():
+        tracker.enabled = not tracker.enabled
+        return json.dumps({'status':'OK'})
+
     @app.route("/tagPresent")
     def tagPresent():
         if tag.readUUID():
@@ -76,4 +81,3 @@ try:
         time.sleep(0.1)
 finally:
     tag.ENABLED = False
-
