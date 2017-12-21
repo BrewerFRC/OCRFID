@@ -1,52 +1,230 @@
 <!DOCTYPE html>
-
+<link rel="stylesheet" href="/static/css/bootstrap.min.css" />
 <style>
-#main-container {
-  display: grid;
-  grid-template-rows: 25% auto;
-  grid-template-columns: 25% auto;
+.table-inverse {
+  background-color: #414546;
 }
-#events {
-  grid-column-start: 1;
-  grid-column-end: 1;
+#main-container {
+  display: inline-grid;
+  grid-template-rows: 7% 7% auto;
+  grid-template-columns: 15% 20% 20% auto;
+  width: 100vw;
+  height: 100vh;
+  background-color: #414546;
+}
+#title {
   grid-row-start: 1;
   grid-row-end: 2;
+  grid-column-start: 1;
+  grid-column-end: 2;
+  color: #f35f00;
+  background-color: #292b2c;
+  padding: 5%;
+  height: 100%
+}
+#registerMember {
+  grid-row-start: 1;
+  grid-row-end: 2;
+  grid-column-start: 2;
+  grid-column-end: 3;
+  background-color: #292b2c;
+}
+#createEvent {
+  grid-row-start: 1;
+  grid-row-end:2;
+  grid-column-start: 3;
+  grid-column-end: 4;
+  background-color: #292b2c;
+}
+#logo {
+  grid-row-start: 1;
+  grid-row-end:2;
+  grid-column-start: 4;
+  grid-column-end: 5;
+  background-color: #292b2c;
+}
+
+#events {
+  grid-column-start: 1;
+  grid-column-end: 2;
+  grid-row-start: 2;
+  grid-row-end: 4;
   overflow-y: scroll;
-  border-width: 3px;
-  border-color: black;
+  background-color: #414546;
+  float: none;
+}
+.event {
+  width: 100%;
+  height: 5%;
+  color: #FFFFFF;
+  padding: 3%;
+}
+.event:hover {
+  background-color: #f35f00;
 }
 #search {
   grid-column-start: 2;
-  grid-column-end: 2;
-  grid-row-start: 1;
-  grid-row-end: 1;
+  grid-column-end: 5;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  background-color: #414546;
 }
 #time {
   grid-column-start: 2;
-  grid-column-end: 2;
-  grid-row-start: 2;
-  grid-row-end: 2;
+  grid-column-end: 5;
+  grid-row-start: 3;
+  grid-row-end: 4;
+}
+
+/*
+Scrollbar
+*/
+#events::-webkit-scrollbar-track{
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	border-radius: 10px;
+	background-color: #F5F5F5;
+}
+#events::-webkit-scrollbar{
+	width: 12px;
+	background-color: #F5F5F5;
+}
+#events::-webkit-scrollbar-thumb{
+	border-radius: 10px;
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+	background-color: #292b2c;
 }
 </style>
 
 <div id="main-container">
+  <h2 id="title">OCRFID</h2>
+  <form id="registerMember" method="post" class="form-inline">
+    <input type="text" id="member" name="member" placeholder="Member Name" required>
+    <input type="button" id="newMember" class="form-control" value="Register Member" disabled="disabled">
+  </form>
+  <form id="createEvent" method="post" class="form-inline">
+    <input type="text" id="event" name="event" placeholder="Event Name" required>
+    <input type="button" id="newEvent" class="form-control" value="Create New Event" disabled="disabled">
+  </form>
+  <div id="logo">
 
-  <ul id="events"></ul>
+  </div>
+  <ul id="events" class="list-unstyled"></ul>
   <div id="search">
     <form>
-      <input style="width: 75%;margin-top: auto;" type="text" placeholder="Type a name here to narrow search.">
+      <input type="text" id="nameSearch" placeholder="Type a name here to narrow search." class="form-control">
     </form>
   </div>
-  <table id="time" class="table-striped">
+
+  <table id="time" class="table table-hover table-inverse">
     <tr>
-      <td>UUID</td>
-      <td>Name</td>
-      <td>Hours</td>
-      <td>Last Clocked</td>
-      <td>Register Date</td>
+      <th>UUID</th>
+      <th>Name</th>
+      <th>Hours</th>
+      <th>Last Clocked</th>
+      <th>Register Date</th>
     </tr>
   </table>
-
 </div>
+
+<script src="/static/js/jquery.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script>
+var members = {{members|safe}};
+var events = {{events|safe}};
+$(document).ready(function() {
+  $.each(members, function(index, value) {
+    var row = "<tr id=entry" + index + ">" +
+      "<td>" + value[0] + "</td>" +
+      "<td class='name'>" + value[1] + "</td>" +
+      "<td>" + value[2] + "</td>" +
+      "<td>" + value[3] + "</td>" +
+      "<td>" + value[4] + "</td>" +
+      "</tr>";
+    $("#time").append(row);
+  });
+  $.each(events, function(index, value) {
+    var li = "<li class='event text-center'>" + value + "</li>";
+    $('#events').append(li);
+  });
+});
+$('#nameSearch').on('input', function(search) {
+  var name = $('#nameSearch').val();
+  $('#time tr').each(function(index, value) {
+    var nameTd = $('#time tr').eq(index).find('.name');
+    if (nameTd && index != 0) {
+      if (nameTd.html().startsWith(name)) {
+        $('#time tr').eq(index).show();
+      }
+      else if (index != 0){
+        $('#time tr').eq(index).hide();
+      }
+    }
+  });
+});
+$('#events .event').click(function(event) {
+  event.toggleClass("active");
+});
+
+//Button toggling
+$('#member').keyup(function() {
+  var empty = false;
+  if ($(this).val() == '') {
+    empty = true;
+  }
+  if (empty) {
+    $('#newMember').attr('disabled', 'disabled');
+  } else {
+    $('#newMember').removeAttr('disabled');
+  }
+});
+$('#event').keyup(function() {
+  var empty = false;
+  if ($(this).val() == '') {
+    empty = true;
+  }
+  if (empty) {
+    $('#newEvent').attr('disabled', 'disabled');
+  } else {
+    $('#newEvent').removeAttr('disabled');
+  }
+});
+
+//POST functions
+$('#newMember').click(function() {
+  $.ajax({
+    url: '/register',
+    data: $('#createEvent').serialize(),
+    type: 'POST'
+  });
+});
+$('#newEvent').click(function() {
+  var li = "<li class='event text-center'>" + $('#event').val() + "</li>";
+  $('#events').append(li);
+  $.ajax({
+    url: '/newEvent',
+    data: $('#createEvent').serialize(),
+    type: 'POST'
+  });
+});
+
+setInterval(function() {
+  $.get("/tagPresent").done(function (data) {
+    if (data == 'Missing') {
+      $('#newMember').attr("value", "Place Tag");
+      $('#newMember').attr('disabled', 'disabled');
+    }
+    else {
+      $('#newMember').attr("value", "Register Member");
+      var empty = false;
+      if ($('#newMember').val() == '') {
+        empty = true;
+      }
+      if (!empty) {
+        $('#newEvent').removeAttr('disabled');
+      }
+    }
+  });
+}, 1000);
+</script>
 
 </html>

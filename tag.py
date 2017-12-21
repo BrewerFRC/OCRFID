@@ -1,12 +1,12 @@
-import RPi.GPIO as GPIO
-import MFRC522
+#import RPi.GPIO as GPIO
+#import MFRC522
 import time
 import threading
 
 ENABLED = True
 TIMEOUT = 0.1
 
-reader = MFRC522.MFRC522()
+#reader = MFRC522.MFRC522()
 
 uuid = None
 rising = False
