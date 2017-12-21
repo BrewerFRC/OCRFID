@@ -222,7 +222,7 @@ $(document).ready(function() {
 
   //POST functions
   $('#signin').click(function() {
-    $.ajax(function() {
+    $.ajax({
       url: '/toggleSignin',
       data: "",
       type: 'POST'
