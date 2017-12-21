@@ -28,7 +28,7 @@ flaskThread.start()
 try:
     while True:
         tracker.update()
-        print database.sumTime(tag.readUUID())
+        #print database.sumTime(tag.readUUID(), ("build",))
         time.sleep(0.1)
 finally:
     tag.ENABLED = False
