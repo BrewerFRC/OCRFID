@@ -2,6 +2,7 @@ import time
 import tag
 import database
 
+enabled = True
 rising = False
 falling = False
 
@@ -20,7 +21,8 @@ def update():
         rising = False
 
 def riseEvent():
-    database.recordTime(tag.readUUID())
+    if enabled:
+        database.recordTime(tag.readUUID())
 
 def fallEvent():
     pass
