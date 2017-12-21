@@ -62,6 +62,9 @@
 .event:hover {
   background-color: #f35f00;
 }
+.event.active {
+  background-color: #f35f00;
+}
 #search {
   grid-column-start: 2;
   grid-column-end: 5;
@@ -131,7 +134,9 @@ Scrollbar
 <script>
 var members = {{members|safe}};
 var events = {{events|safe}};
-$(document).ready(function() {
+
+function renderTable() {
+  $("#time").find("tr:gt(0)").remove();
   $.each(members, function(index, value) {
     var row = "<tr id=entry" + index + ">" +
       "<td>" + value[0] + "</td>" +
@@ -142,89 +147,119 @@ $(document).ready(function() {
       "</tr>";
     $("#time").append(row);
   });
+}
+
+function renderEvents() {
   $.each(events, function(index, value) {
     var li = "<li class='event text-center'>" + value + "</li>";
     $('#events').append(li);
   });
-});
-$('#nameSearch').on('input', function(search) {
-  var name = $('#nameSearch').val();
-  $('#time tr').each(function(index, value) {
-    var nameTd = $('#time tr').eq(index).find('.name');
-    if (nameTd && index != 0) {
-      if (nameTd.html().startsWith(name)) {
-        $('#time tr').eq(index).show();
-      }
-      else if (index != 0){
-        $('#time tr').eq(index).hide();
-      }
+  $('#events li').each(function() {
+    if ($(this).html() == "{{currentEvent}}") {
+      $(this).toggleClass("active");
     }
   });
-});
-$('#events .event').click(function(event) {
-  event.toggleClass("active");
-});
+}
 
-//Button toggling
-$('#member').keyup(function() {
-  var empty = false;
-  if ($(this).val() == '') {
-    empty = true;
-  }
-  if (empty) {
-    $('#newMember').attr('disabled', 'disabled');
-  } else {
-    $('#newMember').removeAttr('disabled');
-  }
-});
-$('#event').keyup(function() {
-  var empty = false;
-  if ($(this).val() == '') {
-    empty = true;
-  }
-  if (empty) {
-    $('#newEvent').attr('disabled', 'disabled');
-  } else {
-    $('#newEvent').removeAttr('disabled');
-  }
-});
-
-//POST functions
-$('#newMember').click(function() {
-  $.ajax({
-    url: '/register',
-    data: $('#createEvent').serialize(),
-    type: 'POST'
+$(document).ready(function() {
+  renderTable();
+  renderEvents();
+  //Search bar listener
+  $('#nameSearch').on("input", function(search) {
+    var name = $('#nameSearch').val();
+    $('#time tr').each(function(index, value) {
+      var nameTd = $('#time tr').eq(index).find('.name');
+      if (nameTd && index != 0) {
+        if (nameTd.html().startsWith(name)) {
+          $('#time tr').eq(index).show();
+        }
+        else if (index != 0){
+          $('#time tr').eq(index).hide();
+        }
+      }
+    });
   });
-});
-$('#newEvent').click(function() {
-  var li = "<li class='event text-center'>" + $('#event').val() + "</li>";
-  $('#events').append(li);
-  $.ajax({
-    url: '/newEvent',
-    data: $('#createEvent').serialize(),
-    type: 'POST'
-  });
-});
 
-setInterval(function() {
-  $.get("/tagPresent").done(function (data) {
-    if (data == 'Missing') {
-      $('#newMember').attr("value", "Place Tag");
+  //Event select listener
+  $('#events .event').click(function() {
+    $(this).toggleClass("active");
+    var events = [];
+    $('#events .event').each(function(index, value) {
+      if ($(value).hasClass("active")) {
+        events.push($(value).html());
+      }
+    });
+    $.post('/selectEvent', {"events": events}, function(data) {
+        members = data;
+        renderTable();
+    });
+  });
+
+  //Button toggling
+  $('#member').keyup(function() {
+    var empty = false;
+    if ($(this).val() == '') {
+      empty = true;
+    }
+    if (empty) {
       $('#newMember').attr('disabled', 'disabled');
-    }
-    else {
-      $('#newMember').attr("value", "Register Member");
-      var empty = false;
-      if ($('#newMember').val() == '') {
-        empty = true;
-      }
-      if (!empty) {
-        $('#newEvent').removeAttr('disabled');
-      }
+    } else {
+      $('#newMember').removeAttr('disabled');
     }
   });
-}, 1000);
+  $('#event').keyup(function() {
+    var empty = false;
+    if ($(this).val() == '') {
+      empty = true;
+    }
+    if (empty) {
+      $('#newEvent').attr('disabled', 'disabled');
+    } else {
+      $('#newEvent').removeAttr('disabled');
+    }
+  });
+
+  //POST functions
+  $('#newMember').click(function() {
+    $.ajax({
+      url: '/register',
+      data: $('#createEvent').serialize(),
+      type: 'POST'
+    });
+  });
+  $('#newEvent').click(function() {
+    var li = "<li class='event text-center'>" + $('#event').val() + "</li>";
+    $('#events').append(li);
+    $.ajax({
+      url: '/newEvent',
+      data: $('#createEvent').serialize(),
+      type: 'POST'
+    });
+  });
+
+  //Scheduler
+  setInterval(function() {
+    //Check if tag is available for registration
+    $.get("/tagPresent").done(function (data) {
+      if (data == 'Missing') {
+        $('#newMember').attr("value", "Place Tag");
+        $('#newMember').attr('disabled', 'disabled');
+      }
+      else {
+        $('#newMember').attr("value", "Register Member");
+        var empty = false;
+        if ($('#newMember').val() == '') {
+          empty = true;
+        }
+        if (!empty) {
+          $('#newEvent').removeAttr('disabled');
+        }
+      }
+    });
+  }, 1000);
+});
+
+
 </script>
 
 </html>

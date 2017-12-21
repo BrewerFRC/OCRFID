@@ -62,7 +62,6 @@ def getMembers():
     c.execute('''SELECT DISTINCT uuid, name, register_time FROM members''')
     members = c.fetchall()
     conn.close()
-    print members
     if members:
         return members
     return []
