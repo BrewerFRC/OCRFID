@@ -224,6 +224,7 @@ $(document).ready(function() {
   $('#signin').click(function() {
     $.ajax(function() {
       url: '/toggleSignin',
+      data: "",
       type: 'POST'
     });
   });
