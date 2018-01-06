@@ -11,9 +11,6 @@ reader = MFRC522.MFRC522()
 uuid = None
 rising = False
 
-GPIO.setup(8, GPIO.OUT)
-GPIO.output(8, GPIO.HIGH)
-
 def readUUID():
     return uuid
 

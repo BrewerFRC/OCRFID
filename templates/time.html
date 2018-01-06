@@ -6,8 +6,8 @@
 }
 #main-container {
   display: inline-grid;
-  grid-template-rows: 7% 7% auto;
-  grid-template-columns: 15% 30% 20% auto;
+  grid-template-rows: 7% 5% auto;
+  grid-template-columns: 15% 40% 30% auto;
   width: 100vw;
   height: 100vh;
   background-color: #414546;
@@ -36,12 +36,14 @@
   grid-column-end: 4;
   background-color: #292b2c;
 }
-#logo {
+#currentEvent {
   grid-row-start: 1;
-  grid-row-end:2;
+  grid-row-end: 2;
   grid-column-start: 4;
   grid-column-end: 5;
   background-color: #292b2c;
+  color: white;
+  height: 100%;
 }
 
 #events {
@@ -71,12 +73,21 @@
   grid-row-start: 2;
   grid-row-end: 3;
   background-color: #414546;
+  height: 100%;
 }
-#time {
+#timeWrapper {
   grid-column-start: 2;
   grid-column-end: 5;
   grid-row-start: 3;
   grid-row-end: 4;
+  background: #414546 url('static/images/logo.png');
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  height: 100%;
+}
+#time {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 /*
@@ -109,25 +120,24 @@ Scrollbar
     <input type="text" id="event" name="event" placeholder="Event Name" required>
     <input type="button" id="newEvent" class="form-control" value="Create New Event" disabled="disabled">
   </form>
-  <div id="logo">
-
-  </div>
+  <select id="currentEvent" class="form-control"></select>
   <ul id="events" class="list-unstyled"></ul>
   <div id="search">
     <form>
       <input type="text" id="nameSearch" placeholder="Type a name here to narrow search." class="form-control">
     </form>
   </div>
-
-  <table id="time" class="table table-hover table-inverse">
-    <tr>
-      <th>UUID</th>
-      <th>Name</th>
-      <th>Hours</th>
-      <th>Last Clocked</th>
-      <th>Register Date</th>
-    </tr>
-  </table>
+  <div id="timeWrapper">
+	  <table id="time" class="table table-hover table-inverse">
+		<tr>
+		  <th>UUID</th>
+		  <th>Name</th>
+		  <th>Hours</th>
+		  <th>Last Clocked</th>
+		  <th>Register Date</th>
+		</tr>
+	  </table>
+  </div>
 </div>
 
 <script src="/static/js/jquery.js"></script>
@@ -142,7 +152,7 @@ function renderTable() {
     var row = "<tr id=entry" + index + ">" +
       "<td>" + value[0] + "</td>" +
       "<td class='name'>" + value[1] + "</td>" +
-      "<td>" + value[2] + "</td>" +
+      "<td>" + (value[2]/3600) + "</td>" +
       "<td>" + value[3] + "</td>" +
       "<td>" + value[4] + "</td>" +
       "</tr>";
@@ -154,6 +164,14 @@ function renderEvents() {
   $.each(events, function(index, value) {
     var li = "<li class='event text-center'>" + value + "</li>";
     $('#events').append(li);
+	var selectItem = "";
+	if (value === "{{currentEvent}}") {
+	  selectItem = "<option selected>" + value + "</option>";
+	}
+	else {
+	  selectItem = "<option>" + value + "</option>";
+	}
+	$('#currentEvent').append(selectItem);
   });
   $('#events li').each(function() {
     if ($(this).html() == "{{currentEvent}}") {
@@ -221,28 +239,47 @@ $(document).ready(function() {
   });
 
   //POST functions
-  $('#signin').click(function() {
+  $('#signIn').click(function() {
     $.ajax({
-      url: '/toggleSignin',
+      url: '/toggleSignIn',
       data: "",
       type: 'POST'
-    });
+    }).done(function(data) {
+	  var json = JSON.parse(data);
+	  if (json.enabled === "False") {
+	    $('#signIn').attr("value", "Enable Sign-In");
+	    $('#signIn').css("color", "#f35f00");
+	  }
+	  else {
+	    $('#signIn').attr("value", "Disable Sign-In");
+	    $('#signIn').css("color", "#292b2c");
+	  }
+	});
   });
   $('#newMember').click(function() {
     $.ajax({
       url: '/register',
-      data: $('#createEvent').serialize(),
+      data: $('#registerMember').serialize(),
       type: 'POST'
     });
+    $('#newMember').attr("value", "Registered!");
+    setTimeout(function() {
+      $('#newMember').attr("value", "Place Tag");
+    }, 3000);
   });
   $('#newEvent').click(function() {
     var li = "<li class='event text-center'>" + $('#event').val() + "</li>";
+	var selectItem = "<option>" + $('#event').val() + "</option>";
     $('#events').append(li);
+	$('#currentEvent').append(selectItem);
     $.ajax({
       url: '/newEvent',
       data: $('#createEvent').serialize(),
       type: 'POST'
     });
+  });
+  $('#currentEvent').change(function() {
+    $.post('/changeEvent', {'currentEvent': this.value}, function(data){});
   });
 
   //Scheduler
@@ -260,7 +297,7 @@ $(document).ready(function() {
           empty = true;
         }
         if (!empty) {
-          $('#newEvent').removeAttr('disabled');
+          $('#newMember').removeAttr('disabled');
         }
       }
     });

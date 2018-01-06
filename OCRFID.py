@@ -6,8 +6,12 @@ import tracker
 from flask import Flask, render_template, request, json, jsonify
 import threading
 import os
+import logging
 
 app = Flask(__name__)
+
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 def buildTimeData(events=[database.currentEvent]):
     members = database.getMembers()
@@ -21,7 +25,7 @@ def buildTimeData(events=[database.currentEvent]):
             lastClock = None
         hours = database.sumTime(m[0], events)
         data.append([str(m[0]), str(m[1]), str(hours), str(lastClock), str(date.strftime('%b %d, %Y'))])
-    return data
+    return sorted(data, key=lambda x: x[2], reverse=True)
 
 class FlaskThread(threading.Thread):
     @app.route("/")
@@ -41,6 +45,12 @@ class FlaskThread(threading.Thread):
     def selectEvent():
         return jsonify(buildTimeData(request.form.getlist('events[]')))
 
+    @app.route("/changeEvent", methods=['POST'])
+    def changeEvent():
+        print request.form
+        database.currentEvent = request.form['currentEvent']
+        return json.dumps({'status':'OK'})
+
     @app.route("/register", methods=['POST'])
     def register():
         uuid = tag.readUUID()
@@ -54,7 +64,7 @@ class FlaskThread(threading.Thread):
     @app.route("/toggleSignIn", methods=['POST'])
     def toggleSignIn():
         tracker.enabled = not tracker.enabled
-        return json.dumps({'status':'OK'})
+        return json.dumps({'enabled':str(tracker.enabled)})
 
     @app.route("/tagPresent")
     def tagPresent():
@@ -76,6 +86,7 @@ flaskThread = FlaskThread()
 flaskThread.start()
 
 try:
+    database.removeOutdatedEntries()
     while True:
         tracker.update()
         time.sleep(0.1)

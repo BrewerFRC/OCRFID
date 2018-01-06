@@ -2,7 +2,7 @@ import sqlite3
 import time
 
 #Time in seconds to wait before allowing another time event for a user.
-DEBOUNCE = 2
+DEBOUNCE = 5
 
 events = []
 
@@ -87,6 +87,8 @@ def recordTime(uuid):
         else:
             print "Closed time for ", uuid
             c.execute('''UPDATE timesheet SET out_time=? WHERE uuid=? AND out_time=-1''', (time.time(), uuid,))
+            conn.commit()
+            conn.close()
             return
     #If no open time is found, create a login
     c.execute('''SELECT uuid, in_time, out_time FROM timesheet WHERE uuid=?''', (uuid,))
@@ -94,7 +96,6 @@ def recordTime(uuid):
     c.execute('''SELECT max(out_time) FROM timesheet WHERE uuid=?''', (uuid,))
     lastOutTime = c.fetchone()
     if lastOutTime and lastOutTime[0]:
-        print lastOutTime
         if time.time() - lastOutTime[0] < DEBOUNCE:
             print "Ignoring accidental trigger."
             return
@@ -108,31 +109,47 @@ def removeOutdatedEntries():
     conn = sqlite3.connect('ocrfid.db')
     c = conn.cursor()
     #Delete incomplete slots
-    c.execute('''DELETE FROM timesheet WHERE out_time=-1''')
+    #c.execute('''DELETE FROM timesheet WHERE out_time=-1''')
 
-    conn.commit()
+    #conn.commit()
     conn.close()
 
 def sumTime(uuid, events=[currentEvent]):
     if not uuid:
         return 0
+    if not events or len(events) == 0:
+        return 0
     conn = sqlite3.connect('ocrfid.db')
     c = conn.cursor()
-
-    c.execute('''SELECT sum(out_time), sum(in_time) FROM timesheet WHERE out_time!=-1 AND event IN (%s)''' % ','.join('?'*len(events)), events)
+	
+    eventString = "("
+    for i in range(0, len(events)-1):
+        eventString += "\"" + events[i] + "\", "
+    eventString += "\"" + events[len(events)-1] + "\")"
+    
+    sum = '''SELECT sum(out_time), sum(in_time) FROM timesheet WHERE uuid=? AND out_time!=-1 AND event IN ''' + eventString
+    c.execute(sum, (uuid,))
     time = c.fetchone()
     conn.close()
     if time and len(time) >= 2 and time[0] and time[1]:
-        return sums[0] - sums[1]
+        return time[0] - time[1]
     return 0
 
 def lastClock(uuid, events=[currentEvent]):
     if not uuid:
         return 0
+    if not events or len(events) == 0:
+        return 0
     conn = sqlite3.connect('ocrfid.db')
     c = conn.cursor()
-
-    c.execute('''SELECT max(out_time) FROM timesheet WHERE out_time!=-1 AND event IN (%s)''' % ','.join('?'*len(events)), events)
+    
+    eventString = "("
+    for i in range(0, len(events)-1):
+        eventString += "\"" + events[i] + "\", "
+    eventString += "\"" + events[len(events)-1] + "\")"
+    
+    clock = '''SELECT max(out_time) FROM timesheet WHERE uuid=? AND out_time!=-1 AND event IN ''' + eventString
+    c.execute(clock, (uuid,))
     last = c.fetchone()
     conn.close()
     if last and len(last) > 0:
