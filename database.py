@@ -130,14 +130,14 @@ def sumTime(uuid, events=[currentEvent]):
     #sum = '''SELECT sum(out_time), sum(in_time) FROM timesheet WHERE uuid=? AND out_time!=-1 AND event IN ''' + eventString
     sum = '''SELECT out_time, in_time FROM timesheet WHERE uuid=? AND event IN ''' + eventString
     c.execute(sum, (uuid,))
-    time = c.fetchall()
+    timeList = c.fetchall()
     conn.close()
     #if time and len(time) >= 2 and time[0] and time[1]:
     #    return time[0] - time[1]
     loggedIn = False
     runningSum = 0
-    if time and len(time) > 0:
-        for t in time:
+    if timeList and len(timeList) > 0:
+        for t in timeList:
             if t[0] == -1:
                 loggedIn = True
                 runningSum += time.time() - t[1]
