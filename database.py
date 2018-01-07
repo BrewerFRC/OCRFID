@@ -116,9 +116,9 @@ def removeOutdatedEntries():
 
 def sumTime(uuid, events=[currentEvent]):
     if not uuid:
-        return 0
+        return 0, False
     if not events or len(events) == 0:
-        return 0
+        return 0, False
     conn = sqlite3.connect('ocrfid.db')
     c = conn.cursor()
 
@@ -144,7 +144,7 @@ def sumTime(uuid, events=[currentEvent]):
             else:
                 runningSum += t[0] - t[1]
         return runningSum, loggedIn
-    return 0
+    return 0, False
 
 def lastClock(uuid, events=[currentEvent]):
     if not uuid:
