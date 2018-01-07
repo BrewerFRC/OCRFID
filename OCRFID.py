@@ -23,8 +23,8 @@ def buildTimeData(events=[database.currentEvent]):
             lastClock = datetime.datetime.fromtimestamp(lastClockTime).strftime('%b %d, %Y')
         else:
             lastClock = None
-        hours = database.sumTime(m[0], events)
-        data.append([str(m[0]), str(m[1]), str(hours), str(lastClock), str(date.strftime('%b %d, %Y'))])
+        hours, loggedIn = database.sumTime(m[0], events)
+        data.append([str(m[0]), str(m[1]), str(hours), str(lastClock), str(date.strftime('%b %d, %Y')), str(loggedIn)])
     return sorted(data, key=lambda x: x[2], reverse=True)
 
 class FlaskThread(threading.Thread):

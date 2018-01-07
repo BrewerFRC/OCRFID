@@ -149,9 +149,18 @@ var events = {{events|safe}};
 function renderTable() {
   $("#time").find("tr:gt(0)").remove();
   $.each(members, function(index, value) {
+    var loggedIn = value[5] === "True";
     var row = "<tr id=entry" + index + ">" +
       "<td>" + value[0] + "</td>" +
-      "<td class='name'>" + value[1] + "</td>" +
+      "<td class='name'>";
+      if (loggedIn) {
+        row += "<b>";
+      }
+      row += value[1];
+      if (loggedIn) {
+        row += "</b>";
+      }
+      row += "</td>" +
       "<td>" + (value[2]/3600) + "</td>" +
       "<td>" + value[3] + "</td>" +
       "<td>" + value[4] + "</td>" +
