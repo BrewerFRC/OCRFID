@@ -1,17 +1,7 @@
-import time
-import datetime
-import tag
-import database
-import tracker
-from flask import Flask, render_template, request, json, jsonify
-import threading
-import os
-import logging
+import datetime, tag, database, threading, os, tracker
+from flask import Blueprint, render_template, request, json, jsonify
 
-app = Flask(__name__)
-
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+blueprint = Blueprint('main', __name__)
 
 def buildTimeData(events=[database.currentEvent]):
     members = database.getMembers()
@@ -27,13 +17,12 @@ def buildTimeData(events=[database.currentEvent]):
         data.append([str(m[0]), str(m[1]), str(hours), str(lastClock), str(date.strftime('%b %d, %Y')), str(loggedIn)])
     return sorted(data, key=lambda x: x[2], reverse=True)
 
-class FlaskThread(threading.Thread):
-    @app.route("/")
-    def time():
-        events = []
-        for i in range(0, len(database.events)):
-            events.append(str(database.events[i]))
-        return render_template("time.html", members=buildTimeData(), events=events, currentEvent=database.currentEvent,)
+@app.route("/")
+def time():
+    events = []
+    for i in range(0, len(database.events)):
+        events.append(str(database.events[i]))
+    return render_template("time.html", members=buildTimeData(), events=events, currentEvent=database.currentEvent,)
 
     @app.route("/status")
     def status():
@@ -48,67 +37,51 @@ class FlaskThread(threading.Thread):
         database.createEvent(event)
         return json.dumps({'status':'OK'})
 
-    @app.route("/selectEvent", methods=['POST'])
-    def selectEvent():
-        return jsonify(buildTimeData(request.form.getlist('events[]')))
+@app.route("/selectEvent", methods=['POST'])
+def selectEvent():
+    return jsonify(buildTimeData(request.form.getlist('events[]')))
 
-    @app.route("/changeEvent", methods=['POST'])
-    def changeEvent():
-        print request.form
-        database.currentEvent = request.form['currentEvent']
+@app.route("/changeEvent", methods=['POST'])
+def changeEvent():
+    print request.form
+    database.currentEvent = request.form['currentEvent']
+    return json.dumps({'status':'OK'})
+
+@app.route("/register", methods=['POST'])
+def register():
+    uuid = tag.readUUID()
+    name = request.form['member']
+    if uuid and name:
+        database.registerMember(name, uuid)
         return json.dumps({'status':'OK'})
+    else:
+        return json.dumps({'status':'FAILED'})
 
-    @app.route("/register", methods=['POST'])
-    def register():
-        uuid = tag.readUUID()
-        name = request.form['member']
-        if uuid and name:
-            database.registerMember(name, uuid)
-            return json.dumps({'status':'OK'})
-        else:
-            return json.dumps({'status':'FAILED'})
-
-    @app.route("/toggleSignIn", methods=['POST'])
-    def toggleSignIn():
-        tracker.enabled = not tracker.enabled
-        return json.dumps({'enabled':str(tracker.enabled)})
-
-    @app.route("/tagPresent")
-    def tagPresent():
-        if tag.readUUID():
-            return "Present"
-        else:
-            return "Missing"
-
-    @app.route("/timeData")
-    def timeData():
+@app.route("/clock", methods=['POST'])
+def clock():
+    uuid = request.form['uuid']
+    time = request.form['time']
+    events = request.form['events']
+    if not request.form['events']:
+        events=None
+    if uuid and time:
+        database.recordTime(uuid=uuid, customTime=time)
+    if not request.form['events']:
         return buildTimeData()
+    return buildTimeData(events=events)
 
-    @app.route("/clock", methods=['POST'])
-    def clock():
-        uuid = request.form['uuid']
-        time = request.form['time']
-        events = request.form['events']
-        if not request.form['events']:
-            events=None
-        if uuid and time:
-            database.recordTime(uuid=uuid, customTime=time)
-        if not request.form['events']:
-            return buildTimeData()
-        return buildTimeData(events=events)
+@app.route("/toggleSignIn", methods=['POST'])
+def toggleSignIn():
+    tracker.enabled = not tracker.enabled
+    return json.dumps({'enabled':str(tracker.enabled)})
 
-    def run(self):
-            app.secret_key = 'super secret key'
-            app.config['SESSION_TYPE'] = 'filesystem'
-            app.run(host= '0.0.0.0', port=int(os.environ.get("PORT", 80)), debug=True, use_reloader=False, threaded=True)
+@app.route("/tagPresent")
+def tagPresent():
+    if tag.readUUID():
+        return "Present"
+    else:
+        return "Missing"
 
-flaskThread = FlaskThread()
-flaskThread.start()
-
-try:
-    database.removeOutdatedEntries()
-    while True:
-        tracker.update()
-        time.sleep(0.1)
-finally:
-    tag.ENABLED = False
+@app.route("/timeData")
+def timeData():
+    return buildTimeData()
