@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="../static/css/bootstrap.min.css" />
+<style>
+.table-inverse {
+  background-color: #414546;
+}
+#main-container {
+  display: inline-grid;
+  grid-template-rows: 7% auto;
+  grid-template-columns: 50% auto;
+  width: 100vw;
+  height: 100vh;
+  background-color: #414546;
+}
+
+#currentEvent {
+  grid-column-start: 1;
+  grid-column-end: 2;
+  grid-row-start: 1;
+  grid-row-end: 2;
+}
+
+#timeWrapper {
+  grid-column-start: 1;
+  grid-column-end: 2;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  background: #414546 url('static/images/logo.png');
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  height: 100%;
+}
+#time {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/*
+Scrollbar
+*/
+#time::-webkit-scrollbar-track{
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	border-radius: 10px;
+	background-color: #F5F5F5;
+}
+#time::-webkit-scrollbar{
+	width: 12px;
+	background-color: #F5F5F5;
+}
+#time::-webkit-scrollbar-thumb{
+	border-radius: 10px;
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+	background-color: #292b2c;
+}
+</style>
+
+<div id="main-container">
+  <select id="currentEvent" class="form-control"></select>
+  <div id="timeWrapper">
+	  <table id="time" class="table table-hover table-inverse">
+		<tr>
+		  <th>UUID</th>
+		  <th>Name</th>
+		  <th>Hours</th>
+		  <th>Last Clocked</th>
+		  <th>Register Date</th>
+		</tr>
+	  </table>
+  </div>
+</div>
+
+<script src="../static/js/jquery.js"></script>
+<script src="../static/js/bootstrap.min.js"></script>
+<script>
+var members = [['1234', 'Evan McCoy', 1234, 1234, 1234, 'True']];//{{members|safe}};
+var events = ['Build 2018'];//{{events|safe}};
+
+function renderTable() {
+  $("#time").find("tr:gt(0)").remove();
+  $.each(members, function(index, value) {
+    var loggedIn = value[5] === "True";
+    var row = "<tr id=entry" + index + ">" +
+      "<td>" + value[0] + "</td>" +
+      "<td class='name'>";
+      if (loggedIn) {
+        row += "<b>";
+      }
+      row += value[1];
+      if (loggedIn) {
+        row += "</b>";
+      }
+      row += "</td>" +
+      "<td>" + (value[2]/3600) + "</td>" +
+      "<td>" + value[3] + "</td>" +
+      "<td>" + value[4] + "</td>" +
+      "</tr>";
+    $("#time").append(row);
+  });
+}
+
+function renderEvents() {
+  $.each(events, function(index, value) {
+  	var selectItem = "";
+  	if (value === "Build 2018") {//"{{currentEvent}}") {
+  	  selectItem = "<option selected>" + value + "</option>";
+  	}
+  	else {
+  	  selectItem = "<option>" + value + "</option>";
+  	}
+  	$('#currentEvent').append(selectItem);
+  });
+}
+
+$(document).ready(function() {
+  renderTable();
+  renderEvents();
+
+  //Scheduler
+  setInterval(function() {
+    $.post('/selectEvent', {"events": [$('#currentEvent').value]}, function(data) {
+        members = data;
+        renderTable();
+    });
+  }, 1000);
+});
+
+
+</script>
+
+</html>

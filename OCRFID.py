@@ -35,6 +35,13 @@ class FlaskThread(threading.Thread):
             events.append(str(database.events[i]))
         return render_template("time.html", members=buildTimeData(), events=events, currentEvent=database.currentEvent,)
 
+    @app.route("/status")
+    def status():
+        events = []
+        for i in range(0, len(database.events)):
+            events.append(str(database.events[i]))
+        return render_template("status.html", members=buildTimeData(), events=events, currentEvent=database.currentEvent,)
+
     @app.route("/newEvent", methods=['POST'])
     def newEvent():
         event = request.form['event']
@@ -76,6 +83,19 @@ class FlaskThread(threading.Thread):
     @app.route("/timeData")
     def timeData():
         return buildTimeData()
+
+    @app.route("/clock", methods=['POST'])
+    def clock():
+        uuid = request.form['uuid']
+        time = request.form['time']
+        events = request.form['events']
+        if not request.form['events']:
+            events=None
+        if uuid and time:
+            database.recordTime(uuid=uuid, customTime=time)
+        if not request.form['events']:
+            return buildTimeData()
+        return buildTimeData(events=events)
 
     def run(self):
             app.secret_key = 'super secret key'

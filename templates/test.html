@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="../static/css/bootstrap.min.css">
+<style>
+  html {
+    background-color: black;
+  }
+  #borderless {
+    border-width: 0px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 1);
+    color: white;
+    padding: .5rem .75rem;
+    font-size: 1rem;
+    line-height: 1.25;
+    font-family: sans-serif;
+  }
+</style>
+<style>
+.table-inverse {
+  background-color: #414546;
+}
+#main-container {
+  display: inline-grid;
+  grid-template-rows: 7% 5% auto;
+  grid-template-columns: 15% 40% 30% auto;
+  width: 100vw;
+  height: 100vh;
+  background-color: #414546;
+}
+#title {
+  grid-row-start: 1;
+  grid-row-end: 2;
+  grid-column-start: 1;
+  grid-column-end: 2;
+  color: #f35f00;
+  background-color: #292b2c;
+  padding: 5%;
+  height: 100%
+}
+#registerMember {
+  grid-row-start: 1;
+  grid-row-end: 2;
+  grid-column-start: 2;
+  grid-column-end: 3;
+  background-color: #292b2c;
+}
+#createEvent {
+  grid-row-start: 1;
+  grid-row-end:2;
+  grid-column-start: 3;
+  grid-column-end: 4;
+  background-color: #292b2c;
+}
+#currentEvent {
+  grid-row-start: 1;
+  grid-row-end: 2;
+  grid-column-start: 4;
+  grid-column-end: 5;
+  background-color: #292b2c;
+  color: white;
+  height: 100%;
+}
+
+#events {
+  grid-column-start: 1;
+  grid-column-end: 2;
+  grid-row-start: 2;
+  grid-row-end: 4;
+  overflow-y: scroll;
+  background-color: #414546;
+  float: none;
+}
+.event {
+  width: 100%;
+  height: 5%;
+  color: #FFFFFF;
+  padding: 3%;
+}
+.event:hover {
+  background-color: #f35f00;
+}
+.event.active {
+  background-color: #f35f00;
+}
+#search {
+  grid-column-start: 2;
+  grid-column-end: 3;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  background-color: #414546;
+  height: 100%;
+}
+#clockForm {
+  grid-column-start: 3;
+  grid-column-end: 5;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  background-color: #414546;
+  margin: auto 0 auto auto;
+}
+#timeWrapper {
+  grid-column-start: 2;
+  grid-column-end: 5;
+  grid-row-start: 3;
+  grid-row-end: 4;
+  background: #414546 url('static/images/logo.png');
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  height: 100%;
+}
+#time {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.form-control {
+  margin-top: auto;
+  margin-bottom: auto;
+  padding-right: 1rem;
+}
+
+/*
+Scrollbar
+*/
+#events::-webkit-scrollbar-track{
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	border-radius: 10px;
+	background-color: #F5F5F5;
+}
+#events::-webkit-scrollbar{
+	width: 12px;
+	background-color: #F5F5F5;
+}
+#events::-webkit-scrollbar-thumb{
+	border-radius: 10px;
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+	background-color: #292b2c;
+}
+</style>
+
+<div id="main-container">
+  <h2 id="title">OCRFID</h2>
+  <form id="registerMember" method="post" class="form-inline">
+    <input type="text" id="member" name="member" placeholder="Member Name" required>
+    <input type="button" id="newMember" class="form-control" value="Register Member" disabled="disabled">
+    <input type="button" id="signIn" class="form-control" value="Disable Sign-In">
+  </form>
+  <form id="createEvent" method="post" class="form-inline">
+    <input type="text" id="event" name="event" placeholder="Event Name" required>
+    <input type="button" id="newEvent" class="form-control" value="Create New Event" disabled="disabled">
+  </form>
+  <select id="currentEvent" class="form-control"></select>
+  <ul id="events" class="list-unstyled"></ul>
+  <div id="search">
+    <form>
+      <input type="text" id="nameSearch" placeholder="Type a name here to narrow search." class="form-control">
+    </form>
+  </div>
+  <form id="clockForm" class="form-group form-inline">
+    <input type="text" id="clockUUID" placeholder="Click user below or type UUID." class="form-control form-inline">
+    <input type="datetime-local" id="clockTime" class="form-control form-inline">
+    <input type="button" id="manualClock" class="form-control form-inline" value="Manual Clock">
+  </form>
+  <div id="timeWrapper">
+	  <table id="time" class="table table-hover table-inverse">
+		<tr>
+		  <th>UUID</th>
+		  <th>Name</th>
+		  <th>Hours</th>
+		  <th>Last Clocked</th>
+		  <th>Register Date</th>
+		</tr>
+	  </table>
+  </div>
+</div>
+
+<script src="../static/js/jquery.js"></script>
+<script src="../static/js/bootstrap.min.js"></script>
+<script>
+var members = [['1234', 'Evan McCoy', 1234, 1234, 1234, 'True']]//{{members|safe}};
+var events = ['Build 2018']//{{events|safe}};
+var manualTime = "<form style='display: block;'><input type='datetime-local'></input></form>"
+
+function renderTable() {
+  $("#time").find("tr:gt(0)").remove();
+  $.each(members, function(index, value) {
+    var loggedIn = value[5] === "True";
+    var row = "<tr class='entry'" + index + ">" +
+      "<td class='uuid'>" + value[0] + "</td>" +
+      "<td class='name'>";
+      if (loggedIn) {
+        row += "<b>";
+      }
+      row += value[1];
+      if (loggedIn) {
+        row += "</b>";
+      }
+      row += "</td>" +
+      "<td>" + (value[2]/3600) + "</td>" +
+      "<td>" + value[3] + "</td>" +
+      "<td>" + value[4] + "</td>" +
+      manualTime + "</tr>";
+    $("#time").append(row);
+  });
+}
+
+function renderEvents() {
+  $.each(events, function(index, value) {
+    var li = "<li class='event text-center'>" + value + "</li>";
+    $('#events').append(li);
+	var selectItem = "";
+	if (value === "{{currentEvent}}") {
+	  selectItem = "<option selected>" + value + "</option>";
+	}
+	else {
+	  selectItem = "<option>" + value + "</option>";
+	}
+	$('#currentEvent').append(selectItem);
+  });
+  $('#events li').each(function() {
+    if ($(this).html() == "{{currentEvent}}") {
+      $(this).toggleClass("active");
+    }
+  });
+}
+
+$(document).ready(function() {
+  renderTable();
+  renderEvents();
+  //Search bar listener
+  $('#nameSearch').on("input", function(search) {
+    var name = $('#nameSearch').val();
+    $('#time tr').each(function(index, value) {
+      var nameTd = $('#time tr').eq(index).find('.name');
+      if (nameTd && index != 0) {
+        if (nameTd.html().startsWith(name)) {
+          $('#time tr').eq(index).show();
+        }
+        else if (index != 0){
+          $('#time tr').eq(index).hide();
+        }
+      }
+    });
+  });
+
+  //Event select listener
+  $('#events .event').click(function() {
+    $(this).toggleClass("active");
+    var events = [];
+    $('#events .event').each(function(index, value) {
+      if ($(value).hasClass("active")) {
+        events.push($(value).html());
+      }
+    });
+    $.post('/selectEvent', {"events": events}, function(data) {
+        members = data;
+        renderTable();
+    });
+  });
+
+  //Button toggling
+  $('#member').keyup(function() {
+    var empty = false;
+    if ($(this).val() == '') {
+      empty = true;
+    }
+    if (empty) {
+      $('#newMember').attr('disabled', 'disabled');
+    } else {
+      $('#newMember').removeAttr('disabled');
+    }
+  });
+  $('#event').keyup(function() {
+    var empty = false;
+    if ($(this).val() == '') {
+      empty = true;
+    }
+    if (empty) {
+      $('#newEvent').attr('disabled', 'disabled');
+    } else {
+      $('#newEvent').removeAttr('disabled');
+    }
+  });
+
+  //POST functions
+  $('#signIn').click(function() {
+    $.ajax({
+      url: '/toggleSignIn',
+      data: "",
+      type: 'POST'
+    }).done(function(data) {
+	  var json = JSON.parse(data);
+	  if (json.enabled === "False") {
+	    $('#signIn').attr("value", "Enable Sign-In");
+	    $('#signIn').css("color", "#f35f00");
+	  }
+	  else {
+	    $('#signIn').attr("value", "Disable Sign-In");
+	    $('#signIn').css("color", "#292b2c");
+	  }
+	});
+  });
+  $('#newMember').click(function() {
+    $.ajax({
+      url: '/register',
+      data: $('#registerMember').serialize(),
+      type: 'POST'
+    });
+    $('#newMember').attr("value", "Registered!");
+    setTimeout(function() {
+      $('#newMember').attr("value", "Place Tag");
+    }, 3000);
+  });
+  $('#newEvent').click(function() {
+    var li = "<li class='event text-center'>" + $('#event').val() + "</li>";
+	var selectItem = "<option>" + $('#event').val() + "</option>";
+    $('#events').append(li);
+	$('#currentEvent').append(selectItem);
+    $.ajax({
+      url: '/newEvent',
+      data: $('#createEvent').serialize(),
+      type: 'POST'
+    });
+  });
+  $('#currentEvent').change(function() {
+    $.post('/changeEvent', {'currentEvent': this.value}, function(data){});
+  });
+
+  $('.entry').click(function() {
+    var uuid = $(this).children('.uuid').eq(0).html();
+    $('#clockUUID').val(uuid);
+  });
+  $('#manualClock').click(function() {
+    var uuid = $('#clockUUID').val();
+    var time = $('#clockTime').val();
+    if (time != '' && uuid != '') {
+      var timeMillis = new Date(time).getTime();
+      $.post('/clock', {"uuid": uuid, "time": timeMillis, "events": events}, function(data) {
+        members = data;
+        renderTable();
+        $('#manualClock').attr("value", "Clocked!");
+        setTimeout(function() {
+          $('#manualClock').attr("value", "Manual Register");
+        }, 2000);
+      });
+    }
+  });
+
+  //Scheduler
+  setInterval(function() {
+    //Check if tag is available for registration
+    $.get("/tagPresent").done(function (data) {
+      if (data == 'Missing') {
+        $('#newMember').attr("value", "Place Tag");
+        $('#newMember').attr('disabled', 'disabled');
+      }
+      else {
+        $('#newMember').attr("value", "Register Member");
+        var empty = false;
+        if ($('#newMember').val() == '') {
+          empty = true;
+        }
+        if (!empty) {
+          $('#newMember').removeAttr('disabled');
+        }
+      }
+    });
+  }, 1000);
+});
+
+
+</script>
+
+</html>

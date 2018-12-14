@@ -66,9 +66,13 @@ def getMembers():
         return members
     return []
 
-def recordTime(uuid):
+def recordTime(uuid, customTime=-1):
     if not uuid:
         return
+    if customTime > 0:
+        clockTime = customTime
+    else:
+        clockTime = time.time()
     conn = sqlite3.connect('ocrfid.db')
     c = conn.cursor()
 
@@ -86,7 +90,7 @@ def recordTime(uuid):
             return
         else:
             print "Closed time for ", uuid
-            c.execute('''UPDATE timesheet SET out_time=? WHERE uuid=? AND out_time=-1''', (time.time(), uuid,))
+            c.execute('''UPDATE timesheet SET out_time=? WHERE uuid=? AND out_time=-1''', (clockTime, uuid,))
             conn.commit()
             conn.close()
             return
@@ -100,7 +104,7 @@ def recordTime(uuid):
             print "Ignoring accidental trigger."
             return
     print "Opened time for ", uuid
-    c.execute('''INSERT INTO timesheet (uuid, event, in_time, out_time) VALUES (?, ?, ?, -1)''', (uuid, currentEvent, time.time(),))
+    c.execute('''INSERT INTO timesheet (uuid, event, in_time, out_time) VALUES (?, ?, ?, -1)''', (uuid, currentEvent, clockTime,))
 
     conn.commit()
     conn.close()
