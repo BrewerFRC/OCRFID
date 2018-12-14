@@ -1,5 +1,6 @@
 import datetime, tag, database, threading, os, tracker
 from flask import Blueprint, render_template, request, json, jsonify
+from app import socketio
 
 blueprint = Blueprint('main', __name__)
 
@@ -17,6 +18,10 @@ def buildTimeData(events=[database.currentEvent]):
         data.append([str(m[0]), str(m[1]), str(hours), str(lastClock), str(date.strftime('%b %d, %Y')), str(loggedIn)])
     return sorted(data, key=lambda x: x[2], reverse=True)
 
+
+"""
+HTTP Endpoints
+"""
 @app.route("/")
 def time():
     events = []
@@ -24,38 +29,39 @@ def time():
         events.append(str(database.events[i]))
     return render_template("time.html", members=buildTimeData(), events=events, currentEvent=database.currentEvent,)
 
-    @app.route("/status")
-    def status():
-        events = []
-        for i in range(0, len(database.events)):
-            events.append(str(database.events[i]))
-        return render_template("status.html", members=buildTimeData(), events=events, currentEvent=database.currentEvent,)
+@app.route("/status")
+def status():
+    events = []
+    for i in range(0, len(database.events)):
+        events.append(str(database.events[i]))
+    return render_template("status.html", members=buildTimeData(), events=events, currentEvent=database.currentEvent,)
 
-    @app.route("/newEvent", methods=['POST'])
-    def newEvent():
-        event = request.form['event']
-        database.createEvent(event)
-        return json.dumps({'status':'OK'})
+"""
+SocketIO Handlers
+"""
+@socketio.on("new-event")
+def newEvent(data):
+    database.createEvent(data["event"])
 
-@app.route("/selectEvent", methods=['POST'])
-def selectEvent():
-    return jsonify(buildTimeData(request.form.getlist('events[]')))
+@socketio.on("select-event")
+def selectEvent(data):
+    socketio.emit('select-event', buildTimeData(data['events']), namespace=request.sid)
 
-@app.route("/changeEvent", methods=['POST'])
-def changeEvent():
-    print request.form
-    database.currentEvent = request.form['currentEvent']
-    return json.dumps({'status':'OK'})
+@socketio.on('change-event')
+def changeEvent(data):
+    database.currentEvent = data['currentEvent']
 
-@app.route("/register", methods=['POST'])
-def register():
+@socketio.on('register')
+def register(data):
     uuid = tag.readUUID()
-    name = request.form['member']
+    name = data['member']
     if uuid and name:
         database.registerMember(name, uuid)
-        return json.dumps({'status':'OK'})
+        out = {"success": True}
     else:
-        return json.dumps({'status':'FAILED'})
+        out = {"success": False}
+
+    socket.emit('register', out, namespace=request.sid)
 
 @app.route("/clock", methods=['POST'])
 def clock():
@@ -70,17 +76,17 @@ def clock():
         return buildTimeData()
     return buildTimeData(events=events)
 
-@app.route("/toggleSignIn", methods=['POST'])
-def toggleSignIn():
+@socketio.on('toggle-sign-in')
+def toggleSignIn(data):
     tracker.enabled = not tracker.enabled
-    return json.dumps({'enabled':str(tracker.enabled)})
+    socketio.emit('toggle-sign-in', {'enabled': str(tracker.endabled)}, namespace=request.sid)
 
-@app.route("/tagPresent")
-def tagPresent():
+@socketio.on('tag-present')
+def tagPresent(data):
     if tag.readUUID():
-        return "Present"
+        socketio.emit('tag-present', {'tag': True}, namespace=request.sid)
     else:
-        return "Missing"
+        socketio.emit('tag-present', {'tag': False}, namespace=request.sid)
 
 @app.route("/timeData")
 def timeData():

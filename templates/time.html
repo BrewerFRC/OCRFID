@@ -90,6 +90,10 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
+.name b {
+  color: #f35f00;
+}
+
 /*
 Scrollbar
 */
@@ -192,6 +196,101 @@ function renderEvents() {
 $(document).ready(function() {
   renderTable();
   renderEvents();
+
+  /////////////////////////////////
+  // SocketIO listeners
+  /////////////////////////////////
+  
+  socket.on('select-event', function(data) {
+    members = data;
+    renderTable();
+  });
+
+  socket.on('toggle-sign-in', function(data) {
+	  if (data.enabled === "False") {
+	    $('#signIn').attr("value", "Enable Sign-In");
+	    $('#signIn').css("color", "#f35f00");
+	  }
+	  else {
+	    $('#signIn').attr("value", "Disable Sign-In");
+	    $('#signIn').css("color", "#292b2c");
+	  }
+  });
+
+  socket.on('register', function(data) {
+    if (data.success) {
+      $('#newMember').attr("value", "Registered!");
+    }
+    else {
+      $('#newMember').attr("value", "Registration Failed");
+    }
+
+    setTimeout(function() {
+      $('#newMember').attr("value", "Place Tag");
+    }, 3000);
+  });
+
+  socket.on('tag-present', function(data) {
+    if (data.tag) {
+      $('#newMember').attr("value", "Place Tag");
+      $('#newMember').attr('disabled', 'disabled');
+    }
+    else {
+      $('#newMember').attr("value", "Register Member");
+      var empty = false;
+      if ($('#newMember').val() == '') {
+        empty = true;
+      }
+      if (!empty) {
+        $('#newMember').removeAttr('disabled');
+      }
+    }
+  });
+
+  //////////////////////////////////
+  // SocketIO Action Handlers
+  //////////////////////////////////
+  $('#events .event').click(function() {
+    $(this).toggleClass("active");
+    var events = [];
+    $('#events .event').each(function(index, value) {
+      if ($(value).hasClass("active")) {
+        events.push($(value).html());
+      }
+    });
+    socket.emit('select-event', {"events": events});
+  });
+
+  $('#signIn').click(function() {
+    socket.emit('toggle-sign-in', {});
+	});
+
+  $('#newMember').click(function() {
+    socket.emit('register', $('#registerMember').serialize());
+  });
+
+  $('#newEvent').click(function() {
+    var li = "<li class='event text-center'>" + $('#event').val() + "</li>";
+    var selectItem = "<option>" + $('#event').val() + "</option>";
+    $('#events').append(li);
+    $('#currentEvent').append(selectItem);
+    socket.emit('new-event', $('#createEvent').serialize());
+  });
+
+  $('#currentEvent').change(function() {
+    socket.emit('change-event', {'currentEvent', this.value});
+  });
+
+  //Tag update scheduler
+  setInterval(function() {
+    //Check if tag is available for registration
+    socket.emit('tag-present', {});
+  }, 1000);
+
+  /////////////////////////////////////
+  // UI Handlers
+  /////////////////////////////////////
+
   //Search bar listener
   $('#nameSearch').on("input", function(search) {
     var name = $('#nameSearch').val();
@@ -208,22 +307,7 @@ $(document).ready(function() {
     });
   });
 
-  //Event select listener
-  $('#events .event').click(function() {
-    $(this).toggleClass("active");
-    var events = [];
-    $('#events .event').each(function(index, value) {
-      if ($(value).hasClass("active")) {
-        events.push($(value).html());
-      }
-    });
-    $.post('/selectEvent', {"events": events}, function(data) {
-        members = data;
-        renderTable();
-    });
-  });
-
-  //Button toggling
+  //Key listeners
   $('#member').keyup(function() {
     var empty = false;
     if ($(this).val() == '') {
@@ -246,71 +330,6 @@ $(document).ready(function() {
       $('#newEvent').removeAttr('disabled');
     }
   });
-
-  //POST functions
-  $('#signIn').click(function() {
-    $.ajax({
-      url: '/toggleSignIn',
-      data: "",
-      type: 'POST'
-    }).done(function(data) {
-	  var json = JSON.parse(data);
-	  if (json.enabled === "False") {
-	    $('#signIn').attr("value", "Enable Sign-In");
-	    $('#signIn').css("color", "#f35f00");
-	  }
-	  else {
-	    $('#signIn').attr("value", "Disable Sign-In");
-	    $('#signIn').css("color", "#292b2c");
-	  }
-	});
-  });
-  $('#newMember').click(function() {
-    $.ajax({
-      url: '/register',
-      data: $('#registerMember').serialize(),
-      type: 'POST'
-    });
-    $('#newMember').attr("value", "Registered!");
-    setTimeout(function() {
-      $('#newMember').attr("value", "Place Tag");
-    }, 3000);
-  });
-  $('#newEvent').click(function() {
-    var li = "<li class='event text-center'>" + $('#event').val() + "</li>";
-	var selectItem = "<option>" + $('#event').val() + "</option>";
-    $('#events').append(li);
-	$('#currentEvent').append(selectItem);
-    $.ajax({
-      url: '/newEvent',
-      data: $('#createEvent').serialize(),
-      type: 'POST'
-    });
-  });
-  $('#currentEvent').change(function() {
-    $.post('/changeEvent', {'currentEvent': this.value}, function(data){});
-  });
-
-  //Scheduler
-  setInterval(function() {
-    //Check if tag is available for registration
-    $.get("/tagPresent").done(function (data) {
-      if (data == 'Missing') {
-        $('#newMember').attr("value", "Place Tag");
-        $('#newMember').attr('disabled', 'disabled');
-      }
-      else {
-        $('#newMember').attr("value", "Register Member");
-        var empty = false;
-        if ($('#newMember').val() == '') {
-          empty = true;
-        }
-        if (!empty) {
-          $('#newMember').removeAttr('disabled');
-        }
-      }
-    });
-  }, 1000);
 });
 
 
