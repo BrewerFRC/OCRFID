@@ -1,7 +1,4 @@
-import time
-import tag
-import database
-import RPi.GPIO as GPIO
+import time, tag, database, RPi.GPIO as GPIO
 from threading import Timer
 
 GPIO.setup(8, GPIO.OUT)

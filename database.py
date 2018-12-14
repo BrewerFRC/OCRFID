@@ -1,5 +1,4 @@
-import sqlite3
-import time
+import sqlite3, time
 
 #Time in seconds to wait before allowing another time event for a user.
 DEBOUNCE = 5

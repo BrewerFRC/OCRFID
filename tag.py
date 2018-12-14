@@ -1,7 +1,4 @@
-import RPi.GPIO as GPIO
-import MFRC522
-import time
-import threading
+import RPi.GPIO as GPIO, MFRC522, time, threading
 
 ENABLED = True
 TIMEOUT = 0.1
