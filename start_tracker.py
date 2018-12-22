@@ -1,9 +1,10 @@
-import database, tracker, tag, time
+import database, tag, time
 
 try:
     database.removeOutdatedEntries()
+    tag.start()
     while True:
-        tracker.update()
+        tag.update()
         time.sleep(0.1)
 finally:
     tag.ENABLED = False

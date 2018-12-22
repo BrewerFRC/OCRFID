@@ -39,5 +39,10 @@
   <script src="/static/js/jquery.js"></script>
   <script src="/static/js/bootstrap.min.js"></script>
   <script src="/static/js/socketConnection.js"></script>
+  <script>
+    var members = {{members|safe}};
+    var events = {{events|safe}};
+    var currentEvent = "{{currentEvent}}";
+  </script>
   <script src="/static/js/time.js"></script>
 </html>

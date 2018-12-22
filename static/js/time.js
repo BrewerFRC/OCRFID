@@ -1,6 +1,3 @@
-var members = {{members|safe}};
-var events = {{events|safe}};
-
 function renderTable() {
   $("#time").find("tr:gt(0)").remove();
   $.each(members, function(index, value) {
@@ -29,7 +26,7 @@ function renderEvents() {
     var li = "<li class='event text-center'>" + value + "</li>";
     $('#events').append(li);
 	var selectItem = "";
-	if (value === "{{currentEvent}}") {
+	if (value === currentEvent) {
 	  selectItem = "<option selected>" + value + "</option>";
 	}
 	else {
@@ -38,7 +35,7 @@ function renderEvents() {
 	$('#currentEvent').append(selectItem);
   });
   $('#events li').each(function() {
-    if ($(this).html() == "{{currentEvent}}") {
+    if ($(this).html() == currentEvent) {
       $(this).toggleClass("active");
     }
   });
@@ -129,7 +126,7 @@ $(document).ready(function() {
   });
 
   $('#currentEvent').change(function() {
-    socket.emit('change-event', {'currentEvent', this.value});
+    socket.emit('change-event', {'currentEvent': this.value});
   });
 
   //Tag update scheduler

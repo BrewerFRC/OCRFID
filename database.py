@@ -55,24 +55,24 @@ def recordTime(uuid, customTime=-1):
     if incompleteTime:
         #Ignore incomplete entry if over 18 hours old.
         if time.time() - incompleteTime[0] > 3600*18:
-            print "Removed time for ", uuid
+            print ("Removed time for ", uuid)
             db.execute(queries.cancel_open_member_clock, (uuid,))
         #Ignore accidental triggers close to login
         elif time.time() - incompleteTime[0] < DEBOUNCE:
-            print "Ignoring accidental trigger."
+            print ("Ignoring accidental trigger.")
             return
         else:
-            print "Closed time for ", uuid
+            print ("Closed time for ", uuid)
             db.execute(queries.close_clock, (clockTime, uuid,))
             return
     #If no open time is found, create a login
     lastOutTime = db.fetchOne(queries.get_last_member_clock_out, (uuid,))
     if lastOutTime and lastOutTime[0]:
         if time.time() - lastOutTime[0] < DEBOUNCE:
-            print "Ignoring accidental trigger."
+            print ("Ignoring accidental trigger.")
             return
-    print "Opened time for ", uuid
-    db.execute(queries.clock_member, (uuid, currentEvent, clockTime,))
+    print ("Opened time for ", uuid)
+    db.execute(queries.clock_member, (uuid, currentEvent, clockTime, -1))
 
 def removeOutdatedEntries():
     #Delete incomplete slots

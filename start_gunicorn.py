@@ -1,4 +1,4 @@
 from app import app
-import ocrfid
+import OCRFID
 
-app.register_blueprint(ocrfid.blueprint)
+app.register_blueprint(OCRFID.blueprint)

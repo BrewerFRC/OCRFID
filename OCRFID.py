@@ -1,4 +1,4 @@
-import datetime, tag, database, threading, os, tracker
+import datetime, tag, database, threading, os
 from flask import Blueprint, render_template, request, json, jsonify
 from app import socketio
 
@@ -22,14 +22,14 @@ def buildTimeData(events=[database.currentEvent]):
 """
 HTTP Endpoints
 """
-@app.route("/")
+@blueprint.route("/")
 def time():
     events = []
     for i in range(0, len(database.events)):
         events.append(str(database.events[i]))
     return render_template("time.html", members=buildTimeData(), events=events, currentEvent=database.currentEvent,)
 
-@app.route("/status")
+@blueprint.route("/status")
 def status():
     events = []
     for i in range(0, len(database.events)):
@@ -63,7 +63,7 @@ def register(data):
 
     socket.emit('register', out, namespace=request.sid)
 
-@app.route("/clock", methods=['POST'])
+@blueprint.route("/clock", methods=['POST'])
 def clock():
     uuid = request.form['uuid']
     time = request.form['time']
@@ -78,8 +78,8 @@ def clock():
 
 @socketio.on('toggle-sign-in')
 def toggleSignIn(data):
-    tracker.enabled = not tracker.enabled
-    socketio.emit('toggle-sign-in', {'enabled': str(tracker.endabled)}, namespace=request.sid)
+    tag.tracking = not tag.tracking
+    socketio.emit('toggle-sign-in', {'enabled': str(tag.tracking)}, namespace=request.sid)
 
 @socketio.on('tag-present')
 def tagPresent(data):
@@ -88,6 +88,6 @@ def tagPresent(data):
     else:
         socketio.emit('tag-present', {'tag': False}, namespace=request.sid)
 
-@app.route("/timeData")
+@blueprint.route("/timeData")
 def timeData():
     return buildTimeData()
